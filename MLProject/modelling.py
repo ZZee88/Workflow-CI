@@ -12,7 +12,7 @@ def train_ci_model():
 
     # Path dataset diatur searah dengan folder repository GitHub CI
     CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
-    PREPROCESSED_DIR = os.path.join(CURRENT_DIR, "namadataset_preprocessing")
+    PREPROCESSED_DIR = os.path.join(CURRENT_DIR, "dataset_preprocessing")
 
     TRAIN_DIR = os.path.join(PREPROCESSED_DIR, "train")
     VAL_DIR = os.path.join(PREPROCESSED_DIR, "val")
