@@ -2,82 +2,77 @@ name: Workflow-CI Automation
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
 
 jobs:
   build-and-deploy:
-    runs-size: ubuntu-latest
+    runs-on: ubuntu-latest
     steps:
-    - name: Set up job
-      uses: actions/checkout@v3
+      - name: Set up job
+        uses: actions/checkout@v3
 
-    - name: Run actions/checkout@v3
-      uses: actions/checkout@v3
+      - name: Run actions/checkout@v3
+        uses: actions/checkout@v3
 
-    - name: Set up Python 3.12.7
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.12.7'
+      - name: Set up Python 3.12.7
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.12.7"
 
-    - name: Check Env
-      run: |
-        python --version
-        pip --version
+      - name: Check Env
+        run: |
+          python --version
+          pip --version
 
-    - name: Install dependencies
-      run: |
-        pip install mlflow tensorflow protobuf==3.20.3
+      - name: Install dependencies
+        run: |
+          pip install mlflow tensorflow protobuf==3.20.3 docker
 
-    # Membuat folder dummy agar proses jalannya template code di GitHub Actions tidak error FileNotFound
-     malice dummy data:
-      run: |
-        mkdir -p namadataset_preprocessing/train/cat
-        mkdir -p namadataset_preprocessing/train/dog
-        mkdir -p namadataset_preprocessing/val/cat
-        mkdir -p namadataset_preprocessing/val/dog
-        echo "dummy" > namadataset_preprocessing/train/cat/1.jpg
-        echo "dummy" > namadataset_preprocessing/train/dog/1.jpg
-        echo "dummy" > namadataset_preprocessing/val/cat/1.jpg
-        echo "dummy" > namadataset_preprocessing/val/dog/1.jpg
+      - name: Create Dummy Dataset for CI Pipeline
+        run: |
+          mkdir -p MLProject/namadataset_preprocessing/train/cat
+          mkdir -p MLProject/namadataset_preprocessing/train/dog
+          mkdir -p MLProject/namadataset_preprocessing/val/cat
+          mkdir -p MLProject/namadataset_preprocessing/val/dog
+          echo "dummy" > MLProject/namadataset_preprocessing/train/cat/1.jpg
+          echo "dummy" > MLProject/namadataset_preprocessing/train/dog/1.jpg
+          echo "dummy" > MLProject/namadataset_preprocessing/val/cat/1.jpg
+          echo "dummy" > MLProject/namadataset_preprocessing/val/dog/1.jpg
 
-    - name: Run mlflow project
-      run: |
-        mlflow run . --entry-point main --no-conda
+      - name: Run mlflow project
+        run: |
+          mlflow run MLProject --entry-point main --no-conda
 
-    - name: Get latest MLflow run_id
-      run: |
-        echo "Mendapatkan ID pencatatan eksperimen terakhir..."
+      - name: Get latest MLflow run_id
+        run: |
+          echo "Mendapatkan ID pencatatan eksperimen terakhir..."
 
-    - name: Install Python dependencies
-      run: |
-        pip install docker
+      - name: Upload to GitHub Artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: trained-ci-model
+          path: MLProject/ci_model.keras
 
-    - name: Upload to GitHub Artifacts
-      uses: actions/upload-artifact@v3
-      with:
-        name: trained-ci-model
-        path: ci_model.keras
+      - name: Build Docker Model
+        run: |
+          mlflow models build-docker -m "MLproject/mlruns/0/$(ls -t MLProject/mlruns/0 | head -n 1)/artifacts/model" -n "${{ secrets.DOCKERHUB_USERNAME }}/kucing-anjing-ci:latest" --enable-mlserver
 
-    - name: Build Docker Model
-      run: |
-        mlflow models build-docker -m "runs:/$(mlflow微笑)/model" -n "${{ secrets.DOCKERHUB_USERNAME }}/kucing-anjing-ci:latest" --enable-mlserver
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_PASSWORD }}
 
-    - name: Log in to Docker Hub
-      uses: docker/login-action@v2
-      with:
-        username: ${{ secrets.DOCKERHUB_USERNAME }}
-        password: ${{ secrets.DOCKERHUB_PASSWORD }}
+      - name: Tag Docker Image
+        run: |
+          docker tag ${{ secrets.DOCKERHUB_USERNAME }}/kucing-anjing-ci:latest ${{ secrets.DOCKERHUB_USERNAME }}/kucing-anjing-ci:latest
 
-    - name: Tag Docker Image
-      run: |
-        docker tag ${{ secrets.DOCKERHUB_USERNAME }}/kucing-anjing-ci:latest ${{ secrets.DOCKERHUB_USERNAME }}/kucing-anjing-ci:latest
+      - name: Push Docker Image
+        run: |
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/kucing-anjing-ci:latest
 
-    - name: Push Docker Image
-      run: |
-        docker push ${{ secrets.DOCKERHUB_USERNAME }}/kucing-anjing-ci:latest
+      - name: Post Log in to Docker Hub
+        run: echo "Proses logout atau pembersihan sesi Docker selesai."
 
-    - name: Post Log in to Docker Hub
-      run: echo "Proses logout atau pembersihan sesi Docker selesai."
-
-    - name: Complete job
-      run: echo "Seluruh pipeline CI Advance Berhasil Dieksekusi Sempurna!"
+      - name: Complete job
+        run: echo "Seluruh pipeline CI Advance Berhasil Dieksekusi Sempurna!"
