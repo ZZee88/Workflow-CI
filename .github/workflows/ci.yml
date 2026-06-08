@@ -44,7 +44,7 @@ jobs:
 
       - name: Build Docker Model
         run: |
-          RUN_ID=$(cat run_id.txt)
+          RUN_ID=$(cat $GITHUB_WORKSPACE/run_id.txt)
           mlflow models build-docker -m "runs:/$RUN_ID/model" -n "${{ secrets.DOCKERHUB_USERNAME }}/kucing-anjing-ci:latest"
 
       - name: Log in to Docker Hub
