@@ -49,7 +49,12 @@ def train_ci_model():
 
         # Catat Run ID langsung di dalam block saat run masih aktif
         run_id = mlflow.active_run().info.run_id
-        with open("run_id.txt", "w") as f:
+
+        # Deteksi apakah berjalan di GitHub Actions, jika ya taruh di workspace utama
+        github_workspace = os.environ.get("GITHUB_WORKSPACE", "")
+        file_path = os.path.join(github_workspace, "run_id.txt") if github_workspace else "run_id.txt"
+        
+        with open(file_path, "w") as f:
             f.write(run_id)
 
 if __name__ == "__main__":
