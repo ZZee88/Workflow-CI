@@ -9,13 +9,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Set up job
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4 # <-- Diperbarui ke v4
 
-      - name: Run actions/checkout@v3
-        uses: actions/checkout@v3
+      - name: Run actions/checkout@v4
+        uses: actions/checkout@v4 # <-- Diperbarui ke v4
 
       - name: Set up Python 3.12.7
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5 # <-- Diperbarui ke v5 agar pas dengan node v20
         with:
           python-version: "3.12.7"
 
@@ -28,27 +28,16 @@ jobs:
         run: |
           pip install mlflow tensorflow protobuf==3.20.3 docker
 
-      - name: Create Dummy Dataset for CI Pipeline
-        run: |
-          mkdir -p MLProject/namadataset_preprocessing/train/cat
-          mkdir -p MLProject/namadataset_preprocessing/train/dog
-          mkdir -p MLProject/namadataset_preprocessing/val/cat
-          mkdir -p MLProject/namadataset_preprocessing/val/dog
-          echo "dummy" > MLProject/namadataset_preprocessing/train/cat/1.jpg
-          echo "dummy" > MLProject/namadataset_preprocessing/train/dog/1.jpg
-          echo "dummy" > MLProject/namadataset_preprocessing/val/cat/1.jpg
-          echo "dummy" > MLProject/namadataset_preprocessing/val/dog/1.jpg
-
       - name: Run mlflow project
         run: |
-          mlflow run MLProject --entry-point main --no-conda
+          mlflow run MLProject --entry-point main --env-manager local
 
       - name: Get latest MLflow run_id
         run: |
           echo "Mendapatkan ID pencatatan eksperimen terakhir..."
 
       - name: Upload to GitHub Artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4 # <-- SOLUSI UTAMA: Diperbarui ke v4
         with:
           name: trained-ci-model
           path: MLProject/ci_model.keras
@@ -58,7 +47,7 @@ jobs:
           mlflow models build-docker -m "MLproject/mlruns/0/$(ls -t MLProject/mlruns/0 | head -n 1)/artifacts/model" -n "${{ secrets.DOCKERHUB_USERNAME }}/kucing-anjing-ci:latest" --enable-mlserver
 
       - name: Log in to Docker Hub
-        uses: docker/login-action@v2
+        uses: docker/login-action@v3 # <-- Diperbarui ke v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_PASSWORD }}
