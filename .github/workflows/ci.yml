@@ -44,8 +44,8 @@ jobs:
 
       - name: Build Docker Model
         run: |
-          mlflow models build-docker -m "mlruns/0/$(ls -t mlruns/0 | head -n 1)/artifacts/model" -n "${{ secrets.DOCKERHUB_USERNAME }}/kucing-anjing-ci:latest
-
+          mlflow models build-docker -m "mlruns/0/$(ls -t mlruns/0 | head -n 1)/artifacts/model" -n "${{ secrets.DOCKERHUB_USERNAME }}/kucing-anjing-ci:latest"
+          
       - name: Log in to Docker Hub
         uses: docker/login-action@v3 # <-- Diperbarui ke v3
         with:
