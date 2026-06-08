@@ -48,7 +48,7 @@ def train_ci_model():
         model.save("ci_model.keras")
 
         # Catat Run ID langsung di dalam block saat run masih aktif
-        run_id = run.info.run_id
+        run_id = mlflow.active_run().info.run_id
         with open("run_id.txt", "w") as f:
             f.write(run_id)
 
