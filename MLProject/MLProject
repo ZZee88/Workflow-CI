@@ -1,0 +1,7 @@
+name: Kucing_Anjing_CI_Project
+
+conda_env: conda.yaml
+
+entry_points:
+  main:
+    command: "python modelling.py"
